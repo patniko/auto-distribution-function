@@ -1,6 +1,14 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": ""
-  }
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
+    "distrauto_STORAGE": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
+    "AzureWebJobsDashboard": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
+    "FUNCTIONS_EXTENSION_VERSION": "~1",
+    "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
+    "WEBSITE_CONTENTSHARE": "distributionautomation9b6f",
+    "WEBSITE_NODE_DEFAULT_VERSION": "6.5.0",
+    "AzureWebJobsSecretStorageType": "disabled"
+  },
+  "ConnectionStrings": {}
 }
