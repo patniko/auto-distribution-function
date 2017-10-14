@@ -8,7 +8,8 @@
     "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
     "WEBSITE_CONTENTSHARE": "distributionautomation9b6f",
     "WEBSITE_NODE_DEFAULT_VERSION": "6.5.0",
-    "AzureWebJobsSecretStorageType": "disabled"
+    "AzureWebJobsSecretStorageType": "disabled",
+    "AppCenterAccessToken": "fc4e0d7e807ba6161c720c851992deaeec566e75"
   },
   "ConnectionStrings": {}
 }
