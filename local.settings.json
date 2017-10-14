@@ -9,7 +9,9 @@
     "WEBSITE_CONTENTSHARE": "distributionautomation9b6f",
     "WEBSITE_NODE_DEFAULT_VERSION": "6.5.0",
     "AzureWebJobsSecretStorageType": "disabled",
-    "AppCenterAccessToken": "fc4e0d7e807ba6161c720c851992deaeec566e75"
+    "APP_CENTER_TOKEN": "fc4e0d7e807ba6161c720c851992deaeec566e75",
+    "APP_CENTER_OWNER": "Mobile-Center-Tester-Apps",
+    "APP_CENTER_APP": "MC-Tester-App-iOS"
   },
   "ConnectionStrings": {}
 }
