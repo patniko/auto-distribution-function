@@ -17,99 +17,99 @@ module.exports = function (context, myTimer) {
             const source = rule.source;
             const destination = rule.destination;
 
+            context.log(`Processing rule for ${app} (${source} -> ${destination})...`);
+
             var options = BuildUrl("/recent_releases", token, owner, app);
             return request(options) 
             .then(response => {
                 var releases = JSON.parse(response);
 
                 let release = undefined;
-                for(i = 0; i < releases.length; i++) {
-                    if(IsInGroup(releases[i], source)) {
-                        release = releases[i];
+                for(z = 0; z < releases.length; z++) {
+                    if(IsInGroup(releases[z], source)) {
+                        release = releases[z];
                         break;
                     }
                 }
 
                 if(release) {
-                    context.log(`Processing rule for ${app} ${release.short_version} (${source} -> ${destination})...`);
-                    if(IsInGroup(release, destination))
+
+                    if(!IsInGroup(release, destination))
                     {
-                        context.log("Latest release has already been distributed to the destination.");
+                        context.log(`Checking stats for version ${release.short_version}...`);
+                        
+                        var crashes = new Promise((resolve, reject) => {
+                            var options = BuildUrl(`/analytics/crash_counts?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
+                            request(options)
+                            .then(results => {
+                                results = JSON.parse(results);
+                                if(results.count) {
+                                    resolve(results.count);
+                                } else
+                                    resolve(0);
+                            })
+                            .error(response => {
+                                context.error(response);
+                                reject(response);
+                            });
+                        }); 
+                
+                        var sessions = new Promise((resolve, reject) => {
+                            var options = BuildUrl(`/analytics/session_durations_distribution?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
+                            request(options)
+                            .then(results => {
+                                results = JSON.parse(results);
+                                if(results.distribution && results.distribution[2]) {
+                                    resolve(results.distribution[2].count);
+                                } else
+                                    resolve(0);
+                            })
+                            .error(response => {
+                                context.error(response);
+                                reject(response);
+                            });
+                        }); 
+                
+                        var installs = new Promise((resolve, reject) => {
+                            var options = BuildUrl(`/analytics/versions?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
+                            request(options)
+                            .then(results => {
+                                results = JSON.parse(results);
+                                if (results.versions && results.versions[0]) {
+                                    resolve(results.versions[0].count);
+                                } else
+                                    resolve(0);
+                            })
+                            .error(response => {
+                                context.error(response);
+                                reject(response);
+                            });
+                        }); 
+            
+                        Promise.all([crashes, sessions, installs ])
+                        .then(values => { 
+                            const crashes = values[0];
+                            const sessions= values[1];
+                            const installs = values[2];
+
+                            context.log(`Crashes Detected: ${crashes}`);
+                            context.log(`Sessions (1-30min): ${sessions}`);
+                            context.log(`Total Installs: ${installs}`);
+
+                            if (values.crashes <= rule.crashes && values.installs >= rule.installs && values.sessions >= rule.sessions) {
+                                context.log(`Re-releasing latest version...`);
+                                resolve(true);
+                            } else {
+                                context.log(`Nothing to perform.`);
+                                resolve(false);
+                            }
+                        });
+                    } else {
+                        context.log(`Latest release (${release.short_version}) has already been distributed to the destination.`);
                         resolve(false);
                     }
-
-                    var crashes = new Promise((resolve, reject) => {
-                        var options = BuildUrl(`/analytics/crash_counts?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
-                        request(options)
-                        .then(results => {
-                            results = JSON.parse(results);
-                            if(results.count) {
-                                resolve(results.count);
-                            } else
-                                resolve(0);
-                        })
-                        .error(response => {
-                            context.error(response);
-                            reject(response);
-                        });
-                    }); 
-            
-                    var sessions = new Promise((resolve, reject) => {
-                        var options = BuildUrl(`/analytics/session_durations_distribution?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
-                        request(options)
-                        .then(results => {
-                            results = JSON.parse(results);
-                            if(results.distribution && results.distribution[2]) {
-                                resolve(results.distribution[2].count);
-                            } else
-                                resolve(0);
-                        })
-                        .error(response => {
-                            context.error(response);
-                            reject(response);
-                        });
-                    }); 
-            
-                    var installs = new Promise((resolve, reject) => {
-                        var options = BuildUrl(`/analytics/versions?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
-                        request(options)
-                        .then(results => {
-                            results = JSON.parse(results);
-                            if (results.versions && results.versions[0]) {
-                                resolve(results.versions[0].count);
-                            } else
-                                resolve(0);
-                        })
-                        .error(response => {
-                            context.error(response);
-                            reject(response);
-                        });
-                    }); 
-        
-                    Promise.all([crashes, sessions, installs])
-                    .then(values => { 
-                        //const { crashes, sessions, installs } = values;
-                        const crashes= values[0];
-                        const sessions= values[1];
-                        const installs = values[2];
-
-                        context.log(`Crashes Detected: ${crashes}`);
-                        context.log(`Sessions (1-30min): ${sessions}`);
-                        context.log(`Total Installs: ${installs}`);
-
-                        if (crashes <= rule.crashes && installs >= rule.installs && sessions >= rule.sessions) {
-                            context.log(`Re-releasing latest version...`);
-                            resolve(true);
-                        } else {
-                            context.log(`Nothing to perform.`);
-                            resolve(false);
-                        }
-                    })
-                    .error(error => {
-                        reject(error);
-                        context.error(response);
-                    });
                 } else {
+                    context.log("No releases available in source.");
                     resolve(false);
                 }
             })
