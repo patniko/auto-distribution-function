@@ -1,12 +1,12 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=rereleasetimerb97a;AccountKey=LJoSNOqKOK8a3VGDXAbZY/xD2U2Hvb29jkH9+BxrR2M79e9EOeY93xNSbLdqAyuSyKvaRuR8F9sa2v3X5H2qPQ==",
     "distrauto_STORAGE": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
-    "AzureWebJobsDashboard": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
+    "AzureWebJobsDashboard": "DefaultEndpointsProtocol=https;AccountName=rereleasetimerb97a;AccountKey=LJoSNOqKOK8a3VGDXAbZY/xD2U2Hvb29jkH9+BxrR2M79e9EOeY93xNSbLdqAyuSyKvaRuR8F9sa2v3X5H2qPQ==",
     "FUNCTIONS_EXTENSION_VERSION": "~1",
-    "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "DefaultEndpointsProtocol=https;AccountName=distrauto;AccountKey=nMDJlvCvSBqa4+wTrdFxECK13uHgNlrEVd+mRH2xpiLvShQ6B5oYecLlNIySwRvZn2JaZfjfYfsQCydBqV3q7g==",
-    "WEBSITE_CONTENTSHARE": "distributionautomation9b6f",
+    "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING": "DefaultEndpointsProtocol=https;AccountName=rereleasetimerb97a;AccountKey=LJoSNOqKOK8a3VGDXAbZY/xD2U2Hvb29jkH9+BxrR2M79e9EOeY93xNSbLdqAyuSyKvaRuR8F9sa2v3X5H2qPQ==",
+    "WEBSITE_CONTENTSHARE": "rereleasetimerb97a",
     "WEBSITE_NODE_DEFAULT_VERSION": "6.5.0",
     "AzureWebJobsSecretStorageType": "disabled",
     "APP_CENTER_TOKEN": "fc4e0d7e807ba6161c720c851992deaeec566e75"

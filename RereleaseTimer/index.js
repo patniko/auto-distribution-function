@@ -1,16 +1,14 @@
 var request = require('request-promise');
-var _ = require('lodash');
 
-module.exports = function (context, myTimer) {
-    const timeStamp = new Date().toISOString();
+module.exports = function (context, rereleaseTimer) {
 
     const token = process.env["APP_CENTER_TOKEN"];
     const rules = require('./config.json');
 
-    const dataset = [];
+    const ruleSet = [];
     for(rule of rules) 
     {
-        dataset.push(new Promise((resolve, reject) => {
+        ruleSet.push(new Promise((resolve, reject) => {
 
             const owner = rule.owner;
             const app = rule.app;
@@ -23,14 +21,7 @@ module.exports = function (context, myTimer) {
             return request(options) 
             .then(response => {
                 var releases = JSON.parse(response);
-
-                let release = undefined;
-                for(z = 0; z < releases.length; z++) {
-                    if(IsInGroup(releases[z], source)) {
-                        release = releases[z];
-                        break;
-                    }
-                }
+                let release = GetLatest(releases, source);
 
                 if(release) {
 
@@ -88,17 +79,32 @@ module.exports = function (context, myTimer) {
             
                         Promise.all([crashes, sessions, installs ])
                         .then(values => { 
-                            const crashes = values[0];
-                            const sessions= values[1];
-                            const installs = values[2];
+                            let [ crashes, sessions, installs ] = [ ...values ];
 
                             context.log(`Crashes Detected: ${crashes}`);
                             context.log(`Sessions (1-30min): ${sessions}`);
                             context.log(`Total Installs: ${installs}`);
 
-                            if (values.crashes <= rule.crashes && values.installs >= rule.installs && values.sessions >= rule.sessions) {
+                            if (crashes <= rule.crashes && installs >= rule.installs && sessions >= rule.sessions) {
                                 context.log(`Re-releasing latest version...`);
-                                resolve(true);
+
+                                return GetDistributionGroup(token, owner, app, destination)
+                                .then(group => {
+                                    if(group) {
+                                        const destination = { id: group.id, name: group.name };
+                                        return GetRelease(token, owner, app, release.id)
+                                        .then(release => {
+                                            if(release) {
+                                                release.destination.push(destination);
+                                                return Distribute(token, owner, app, release);
+                                            }
+                                        });
+
+                                        resolve(true);
+                                    } else {
+                                        reject("Could not lookup destination group for re-release.");
+                                    }
+                                });
                             } else {
                                 context.log(`Nothing to perform.`);
                                 resolve(false);
@@ -120,7 +126,7 @@ module.exports = function (context, myTimer) {
         }));
     }
 
-    Promise.all(dataset)
+    Promise.all(ruleSet)
     .then(values => {
         context.log("Finished processing!");
         context.done();
@@ -135,6 +141,14 @@ function BuildUrl(endpoint, token, owner, app) {
     return options;
 }
 
+function GetLatest(releases, group) {
+    for(z = 0; z < releases.length; z++) {
+        if(IsInGroup(releases[z], group)) {
+            return releases[z];
+        }
+    }
+}
+
 function IsInGroup(release, group) {
     if(release.distribution_groups) {
         for(i = 0; i < release.distribution_groups.length; i++) {
@@ -143,4 +157,41 @@ function IsInGroup(release, group) {
         }
     }
     return false;
+}
+
+function FindOne(endpoint, token, owner, app) {
+    var options = BuildUrl(endpoint, token, owner, app);
+    return request(options)
+    .then(result => {
+        result = JSON.parse(results);
+        if (result) {
+            resolve(result[0]);
+        } else
+            resolve();
+    })
+    .error(response => {
+        context.error(response);
+        reject(response);
+    });
+}
+
+function GetDistributionGroup(token, owner, app, group) {
+    return FindOne(`/distribution_groups/${group}`, token, owner, app);
+}
+
+function GetRelease(token, owner, app, release) {
+    return FindOne(`/releases/${release}`, token, owner, app);
+}
+
+function PatchRelease(token, owner, app, release) {
+    const options = BuildUrl(`/releases/${release}`, token, owner, app);
+    Object.assign(options, { method: "PATCH", body: JSON.stringify(release) })
+    return request(options)
+    .then(result => {
+        resolve();
+    })
+    .error(response => {
+        context.error(response);
+        reject(response);
+    });
 }

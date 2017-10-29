@@ -6,12 +6,14 @@
       "name": "Attach to Azure Functions",
       "type": "node",
       "request": "attach",
+      "preLaunchTask": "func host start –-debug vscode",
       "port": 5858
     },
     {
       "name": "Attach to Azure Functions (Java)",
       "type": "java",
       "request": "attach",
+      "preLaunchTask": "func host start –-debug vscode",
       "port": 5005
     }
   ]

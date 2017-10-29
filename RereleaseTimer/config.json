@@ -6,8 +6,8 @@
         "destination": "Alpha Testers",
         "installs": 1,
         "sessions": 1,
-        "crashes": 0
-    },  
+        "crashes": 20
+    },
     {      
         "owner": "Mobile-Center-Tester-Apps",
         "app": "MC-Tester-App-iOS",
@@ -15,6 +15,6 @@
         "destination": "Beta Testers",
         "installs": 1,
         "sessions": 1,
-        "crashes": 0
+        "crashes": 20
     }
  ]
