@@ -1,3 +1,37 @@
+# Getting Started
+1. Install the latest Azure Functions CLI on your system. 
+ 
+```npm install -g azure-functions-core-tools@core ```
+ 
+2. Link the project to your subscription before running by navigating to the Azure portal, creating a new Function called RereleaseTimer underneath a subscription and running the command below to link the two.
+
+```func azure functionapp fetch-app-settings RereleaseTimer ```
+
+3. Update the `config.json` file in the RereleaseTimer folder.
+
+```
+[{        
+  “apiSecret”: “7a84f07d-5825…”
+  "owner": "Tester-Apps",
+  "app": "MC-Tester-App-iOS",
+  “source”: “Alpha Testers”,
+  “installs”: 1,
+  “sessions”: 1,
+  “crashes”: 0,
+  “destination”: “Beta Testers”	
+}]
+```
+
+- _appSecret_ can be identified by logging into the App Center portal and looking at the Getting Started page for your application
+- _owner_ and _app_ properties can be found by navigating to any of the apps attached to your account in App Center and looking at the address bar. 
+- _source_ and _destination_ properties are reserved for the distribution groups you wish to move a release between. 
+- _installs_ are the total number of devices on the latest release
+- _sessions_ are the number of devices that have used the latest version for longer than a minute
+- _crashes_ represents the total number of crash events App Center has received. 
+
+If at any point the latest release within a source group meets all its criteria, it will automatically be distributed to the destination. 
+
+
 
 # Contributing
 
