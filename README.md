@@ -11,7 +11,7 @@
 
 ```
 [{        
-  “apiSecret”: “7a84f07d-5825…”
+  “appSecret”: “7a84f07d-5825…”
   "owner": "Tester-Apps",
   "app": "MC-Tester-App-iOS",
   “source”: “Alpha Testers”,
