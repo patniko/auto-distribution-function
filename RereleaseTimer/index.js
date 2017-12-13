@@ -165,9 +165,8 @@ function FindOne(endpoint, token, owner, app) {
     .then(result => {
         result = JSON.parse(results);
         if (result) {
-            resolve(result[0]);
-        } else
-            resolve();
+            return result[0];
+        }
     })
     .error(response => {
         context.error(response);
