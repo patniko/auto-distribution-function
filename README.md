@@ -7,11 +7,12 @@
 
 ```func azure functionapp fetch-app-settings RereleaseTimer ```
 
-3. Update the `config.json` file in the RereleaseTimer folder.
+3. Update _APP_CENTER_TOKEN_ in `local.settings.json` with a valid [App Center API token](https://appcenter.ms/settings/apitokens).
+
+4. Update the `config.json` file in the RereleaseTimer folder.
 
 ```
-[{        
-  “appSecret”: “7a84f07d-5825…”
+[{
   "owner": "Tester-Apps",
   "app": "MC-Tester-App-iOS",
   “source”: “Alpha Testers”,
@@ -22,7 +23,6 @@
 }]
 ```
 
-- _appSecret_ can be identified by logging into the App Center portal and looking at the Getting Started page for your application
 - _owner_ and _app_ properties can be found by navigating to any of the apps attached to your account in App Center and looking at the address bar. 
 - _source_ and _destination_ properties are reserved for the distribution groups you wish to move a release between. 
 - _installs_ are the total number of devices on the latest release
