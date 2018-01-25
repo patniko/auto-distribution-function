@@ -31,7 +31,9 @@
 
 If at any point the latest release within a source group meets all its criteria, it will automatically be distributed to the destination. 
 
+5. Run the Azure Function locally to verify releases are being processed correctly.
 
+```func host start –-debug vscode```
 
 # Contributing
 

@@ -1,16 +1,16 @@
 [  
     {      
-        "owner": "Mobile-Center-Tester-Apps",
-        "app": "MC-Tester-App-iOS",
-        "source": "Collaborators",
-        "destination": "Alpha Testers",
+        "owner": "App-Center-Demo",
+        "app": "HockeyApp-IOS",
+        "source": "Alpha Testers",
+        "destination": "Beta Testers",
         "installs": 1,
         "sessions": 1,
         "crashes": 20
     },
     {      
-        "owner": "Mobile-Center-Tester-Apps",
-        "app": "MC-Tester-App-iOS",
+        "owner": "App-Center-Demo",
+        "app": "HockeyApp-Android",
         "source": "Alpha Testers",
         "destination": "Beta Testers",
         "installs": 1,
