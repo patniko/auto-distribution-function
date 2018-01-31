@@ -27,7 +27,7 @@ module.exports = function (context, rereleaseTimer) {
 
                     if(!IsInGroup(release, destination))
                     {
-                        context.log(`Checking stats for version ${release.short_version}...`);
+                        context.log(`Checking stats for version ${release.short_version} (${release.id})...`);
                         
                         var crashes = new Promise((resolve, reject) => {
                             var options = BuildUrl(`/analytics/crash_counts?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
@@ -88,21 +88,31 @@ module.exports = function (context, rereleaseTimer) {
                             if (crashes <= rule.crashes && installs >= rule.installs && sessions >= rule.sessions) {
                                 context.log(`Re-releasing latest version...`);
 
-                                return GetDistributionGroup(token, owner, app, destination)
+                                return GetDestination(token, owner, app, rule)
                                 .then(group => {
                                     if(group) {
-                                        const destination = { id: group.id, name: group.name };
                                         return GetRelease(token, owner, app, release.id)
                                         .then(release => {
                                             if(release) {
-                                                release.destination.push(destination);
-                                                return Distribute(token, owner, app, release);
+                                                const patch = {
+                                                    destinations: [{ id: group.id, name: group.name }],
+                                                    mandatory_update: release.mandatory_update,
+                                                    release_notes: release.release_notes
+                                                };
+                                                PatchRelease(token, owner, app, release.id, patch)
+                                                .then((release) => {
+                                                    resolve()
+                                                })
+                                                .error(response => {
+                                                    context.error(response);
+                                                    reject(response);
+                                                });
                                             }
                                         });
 
                                         resolve(true);
                                     } else {
-                                        reject("Could not lookup destination group for re-release.");
+                                        reject("Could not lookup destination for re-release.");
                                     }
                                 });
                             } else {
@@ -135,8 +145,8 @@ module.exports = function (context, rereleaseTimer) {
 
 function BuildUrl(endpoint, token, owner, app) {
     const options = {
-        headers: { 'Accept': 'application/json', 'X-API-Token': token },
-        url: `https://api.mobile.azure.com/v0.1/apps/${owner}/${app}${endpoint}`
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-API-Token': token },
+        url: `https://api.appcenter.ms/v0.1/apps/${owner}/${app}${endpoint}`
     };
     return options;
 }
@@ -163,34 +173,31 @@ function FindOne(endpoint, token, owner, app) {
     var options = BuildUrl(endpoint, token, owner, app);
     return request(options)
     .then(result => {
-        result = JSON.parse(results);
+        result = JSON.parse(result);
         if (result) {
-            return result[0];
+            return result;
         }
     })
-    .error(response => {
-        context.error(response);
-        reject(response);
-    });
 }
 
-function GetDistributionGroup(token, owner, app, group) {
-    return FindOne(`/distribution_groups/${group}`, token, owner, app);
+function GetDestination(token, owner, app, rule) {
+    switch(rule.type) {
+        case "store":
+            return FindOne(`/distribution_stores/${rule.destination}`, token, owner, app);
+        default:
+            return FindOne(`/distribution_groups/${rule.destination}`, token, owner, app);
+    }
 }
 
 function GetRelease(token, owner, app, release) {
     return FindOne(`/releases/${release}`, token, owner, app);
 }
 
-function PatchRelease(token, owner, app, release) {
-    const options = BuildUrl(`/releases/${release}`, token, owner, app);
+function PatchRelease(token, owner, app, id, release) {
+    const options = BuildUrl(`/releases/${id}`, token, owner, app);
     Object.assign(options, { method: "PATCH", body: JSON.stringify(release) })
     return request(options)
-    .then(result => {
-        resolve();
+    .then((result) => {
+        return result;
     })
-    .error(response => {
-        context.error(response);
-        reject(response);
-    });
 }

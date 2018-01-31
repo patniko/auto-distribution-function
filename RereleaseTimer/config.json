@@ -1,20 +1,22 @@
 [  
     {      
-        "owner": "App-Center-Demo",
-        "app": "HockeyApp-IOS",
+        "owner": "app-center",
+        "app": "Tester-App-iOS",
         "source": "Alpha Testers",
         "destination": "Beta Testers",
         "installs": 1,
         "sessions": 1,
-        "crashes": 20
+        "crashes": 1
     },
     {      
-        "owner": "App-Center-Demo",
-        "app": "HockeyApp-Android",
-        "source": "Alpha Testers",
-        "destination": "Beta Testers",
-        "installs": 1,
-        "sessions": 1,
-        "crashes": 20
+        "owner": "app-center",
+        "app": "Tester-App-iOS",
+        "source": "Beta Testers",
+        "destination": "iTunes Connect users",
+        "type": "store",
+        "installs": 20,
+        "sessions": 10,
+        "crashes": 2
     }
  ]
+ 

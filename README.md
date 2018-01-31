@@ -14,17 +14,19 @@
 ```
 [{
   "owner": "Tester-Apps",
-  "app": "MC-Tester-App-iOS",
+  "app": "AC-Tester-App-iOS",
   “source”: “Alpha Testers”,
   “installs”: 1,
   “sessions”: 1,
   “crashes”: 0,
   “destination”: “Beta Testers”	
+  "type": "group" OR "store"
 }]
 ```
 
 - _owner_ and _app_ properties can be found by navigating to any of the apps attached to your account in App Center and looking at the address bar. 
 - _source_ and _destination_ properties are reserved for the distribution groups you wish to move a release between. 
+- _type_ specifies the type of destination you want to automatically redistribute releases to.
 - _installs_ are the total number of devices on the latest release
 - _sessions_ are the number of devices that have used the latest version for longer than a minute
 - _crashes_ represents the total number of crash events App Center has received. 
