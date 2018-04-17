@@ -13,7 +13,7 @@ module.exports = {
     getSessions: function (release, owner, app) {
         return makeRequest(`/analytics/session_durations_distribution?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app)
             .then(results => {
-                return results.distribution ? getSessionCount(results.distribution) : 0;
+                return results.distribution ? utils.getSessionCount(results.distribution) : 0;
             });
     },
 
@@ -24,7 +24,7 @@ module.exports = {
             });
     },
 
-    getDestinationGroup: function (owner, app, rule) {
+    getDestinationGroup: async function (owner, app, rule) {
         switch (rule.type) {
             case "store":
                 return makeRequest(`/distribution_stores/${rule.destination}`, token, owner, app);
@@ -33,15 +33,15 @@ module.exports = {
         }
     },
 
-    getRecentReleases: function (owner, app, rule) {
+    getRecentReleases: async function (owner, app, rule) {
         return makeRequest(`/recent_releases`, token, owner, app);
     },
 
-    getRelease: function (owner, app, release) {
+    getRelease: async function (owner, app, release) {
         return makeRequest(`/releases/${release}`, token, owner, app);
     },
 
-    makeRelease: function (owner, app, id, release) {
+    makeRelease: async function (owner, app, id, release) {
         return makeRequest(`/releases/${id}`, token, owner, app, release);
     }
 };
@@ -58,7 +58,7 @@ function buildUrl(endpoint, token, owner, app) {
     return options;
 }
 
-function makeRequest(endpoint, token, owner, app, body) {
+async function makeRequest(endpoint, token, owner, app, body) {
     var options = buildUrl(endpoint, token, owner, app);
     if (body) {
 
