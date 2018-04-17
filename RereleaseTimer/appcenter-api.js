@@ -13,22 +13,14 @@ module.exports = {
     getSessions: function (release, owner, app) {
         return makeRequest(`/analytics/session_durations_distribution?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app)
             .then(results => {
-                if (results.distribution) {
-                    return utils.getSessionCount(results.distribution);
-                } else {
-                    return 0;
-                }
+                return results.distribution ? getSessionCount(results.distribution) : 0;
             });
     },
 
     getInstallations: function (release, owner, app) {
         return makeRequest(`/analytics/versions?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app)
             .then(results => {
-                if (results.versions && results.versions[0]) {
-                    return results.versions[0].count;
-                } else {
-                    return 0;
-                }
+                return results.versions && results.versions[0] ? results.versions[0].count : 0;
             });
     },
 
@@ -59,7 +51,7 @@ function buildUrl(endpoint, token, owner, app) {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'X-API-Token': token 
+            'X-API-Token': token
         },
         url: `https://api.appcenter.ms/v0.1/apps/${owner}/${app}${endpoint}`
     };
@@ -69,10 +61,12 @@ function buildUrl(endpoint, token, owner, app) {
 function makeRequest(endpoint, token, owner, app, body) {
     var options = buildUrl(endpoint, token, owner, app);
     if (body) {
-        
-        // Method can only be PATCH for now, but in the future we may need to consider 
-        // specifying HTTP_METHOD explicitly.
-        Object.assign(options, { method: "PATCH", body: JSON.stringify(body) });
+
+        // Method can only be PATCH for now, but in the future we may need to consider specifying HTTP_METHOD explicitly.
+        Object.assign(options, {
+            method: "PATCH",
+            body: JSON.stringify(body)
+        });
     }
     return request(options)
         .then(result => {
