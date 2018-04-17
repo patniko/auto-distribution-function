@@ -14,8 +14,7 @@ module.exports = {
         return makeRequest(`/analytics/session_durations_distribution?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app)
             .then(results => {
                 if (results.distribution) {
-                    const sessionCount = utils.getSessionCount(results.distribution);
-                    return sessionCount;
+                    return utils.getSessionCount(results.distribution);
                 } else {
                     return 0;
                 }
