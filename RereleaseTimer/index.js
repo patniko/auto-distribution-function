@@ -56,8 +56,6 @@ function getRulePromise(rule, context) {
             const installationsPromise = appCenterApi.getInstallations(release, owner, app);
             const sessionsPromise = appCenterApi.getSessions(release, owner, app);
             return Promise.all([crashesPromise, sessionsPromise, installationsPromise]);
-        }, (error) => {
-            return Promise.reject(error);
         }).then(stats => {
             if (!stats) {
                 return Promise.resolve(false);
