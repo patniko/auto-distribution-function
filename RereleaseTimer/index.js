@@ -84,14 +84,14 @@ function getRulePromise(rule, context) {
             if (!release) {
                 return Promise.resolve();
             } else {
-                const patch = {
+                const newRelease = {
                     destinations: [{ id: destGroup.id, name: destGroup.name }],
                     mandatory_update: release.mandatory_update,
                     release_notes: release.release_notes
                 };
-                return appCenterApi.patchRelease(owner, app, release.id, patch);
+                return appCenterApi.makeRelease(owner, app, release.id, newRelease);
             }
-        }).then((release) => {
+        }).then(() => {
             resolve(true);
         }, (error) => {
             reject(error);

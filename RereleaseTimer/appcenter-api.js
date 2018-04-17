@@ -49,8 +49,8 @@ module.exports = {
         return makeRequest(`/releases/${release}`, token, owner, app);
     },
 
-    patchRelease: function (owner, app, id, release) {
-        return makeRequest(`/releases/${id}`, token, owner, app);
+    makeRelease: function (owner, app, id, release) {
+        return makeRequest(`/releases/${id}`, token, owner, app, release);
     }
 };
 
