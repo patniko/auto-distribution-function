@@ -75,5 +75,12 @@ async function makeRequest(endpoint, token, owner, app, body) {
                 return result;
             }
             return;
+        }).catch((error) => {
+            if (error.statusCode === 401) {
+                throw new Error("401 Unauthorized. Please check that you have set a valid APP_CENTER_TOKEN in local.settings.")
+            } else if (error.statusCode === 404) {
+                throw new Error("404 Not Found. Please double check the app owner, app name and destination group name in config. Url: " + options.url);
+            }
+            throw error;
         });
 }
