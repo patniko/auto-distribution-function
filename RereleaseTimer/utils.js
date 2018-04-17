@@ -2,6 +2,8 @@ const SESSION_DURATIONS = ["30s-1min", "1-30min", "30min-1h"];
 
 module.exports = {
     getLatestRelease: function(releases, sourceGroup) {
+
+        // "releases" contains an array with one latest release for each distribution group.
         for (release of releases) {
             if (isInGroup(release, sourceGroup)) {
                 return release;
@@ -10,11 +12,17 @@ module.exports = {
     },
 
     getSessionCount: function(distribution) {
+
+        // Take only those session durations that are listed in the array above:
         return distribution.filter((sessionDuration) => {
             return SESSION_DURATIONS.indexOf(sessionDuration.bucket) >= 0;
         }).map(sessionType => {
+
+            // Take their "count" properties:
             return sessionType.count;
         }).reduce((a, b) => {
+            
+            // Make a sum of all "count" properties:
             return a + b;
         }, 0);
     },

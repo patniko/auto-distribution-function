@@ -56,7 +56,11 @@ module.exports = {
 
 function buildUrl(endpoint, token, owner, app) {
     const options = {
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-API-Token': token },
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-API-Token': token 
+        },
         url: `https://api.appcenter.ms/v0.1/apps/${owner}/${app}${endpoint}`
     };
     return options;
@@ -65,6 +69,9 @@ function buildUrl(endpoint, token, owner, app) {
 function makeRequest(endpoint, token, owner, app, body) {
     var options = buildUrl(endpoint, token, owner, app);
     if (body) {
+        
+        // Method can only be PATCH for now, but in the future we may need to consider 
+        // specifying HTTP_METHOD explicitly.
         Object.assign(options, { method: "PATCH", body: JSON.stringify(body) });
     }
     return request(options)
