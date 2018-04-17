@@ -74,8 +74,8 @@ async function getRulePromise(rule, context) {
     }
 
     context.log(`Re-releasing latest version...`);
-    const destinationGroup = await appCenterApi.getDestinationGroup(owner, app, rule);
-    if (!destinationGroup) {
+    const group = await appCenterApi.getDestinationGroup(owner, app, rule);
+    if (!group) {
         throw new Error("Could not lookup destination group for re-release.");
     }
     const newRelease = await appCenterApi.getRelease(owner, app, release.id);
@@ -83,7 +83,7 @@ async function getRulePromise(rule, context) {
         return;
     } else {
         const patchRelease = {
-            destinations: [{ id: destinationGroup.id, name: destinationGroup.name }],
+            destinations: [{ id: group.id, name: group.name }],
             mandatory_update: newRelease.mandatory_update,
             release_notes: newRelease.release_notes
         };
