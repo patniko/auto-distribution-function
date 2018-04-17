@@ -36,7 +36,7 @@ function getRulePromise(rule, context) {
 
     // We need to make a check whether the user has specified all the properties in config.
     if (!(owner && app && sourceGroup && destinationGroup && maxCrashes && minInstallations && minSessions)) {
-        reject(new Error("ERROR: Invalid config file: missing one of the properties."));
+        return Promise.reject(new Error("ERROR: Invalid config file: missing one of the properties."));
     }
 
     context.log(`Processing rule for ${app} (${sourceGroup} -> ${destinationGroup})...`);
