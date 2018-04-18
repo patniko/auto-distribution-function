@@ -1,203 +1,100 @@
-var request = require('request-promise');
+
+const appCenterApi = require('./appcenter-api');
+const utils = require('./utils');
 
 module.exports = function (context, rereleaseTimer) {
-
-    const token = process.env["APP_CENTER_TOKEN"];
     const rules = require('./config.json');
-
+    if (!rules.length) {
+        context.log('ERROR: Invalid config file: should be a json array of rules.');
+        context.done();
+        return;
+    }
     const ruleSet = [];
-    for(rule of rules) 
-    {
-        ruleSet.push(new Promise((resolve, reject) => {
-
-            const owner = rule.owner;
-            const app = rule.app;
-            const source = rule.source;
-            const destination = rule.destination;
-
-            context.log(`Processing rule for ${app} (${source} -> ${destination})...`);
-
-            var options = BuildUrl("/recent_releases", token, owner, app);
-            return request(options) 
-            .then(response => {
-                var releases = JSON.parse(response);
-                let release = GetLatest(releases, source);
-
-                if(release) {
-
-                    if(!IsInGroup(release, destination))
-                    {
-                        context.log(`Checking stats for version ${release.short_version} (${release.id})...`);
-                        
-                        var crashes = new Promise((resolve, reject) => {
-                            var options = BuildUrl(`/analytics/crash_counts?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
-                            request(options)
-                            .then(results => {
-                                results = JSON.parse(results);
-                                if(results.count) {
-                                    resolve(results.count);
-                                } else
-                                    resolve(0);
-                            })
-                            .error(response => {
-                                context.error(response);
-                                reject(response);
-                            });
-                        }); 
-                
-                        var sessions = new Promise((resolve, reject) => {
-                            var options = BuildUrl(`/analytics/session_durations_distribution?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
-                            request(options)
-                            .then(results => {
-                                results = JSON.parse(results);
-                                if(results.distribution && results.distribution[2]) {
-                                    resolve(results.distribution[2].count);
-                                } else
-                                    resolve(0);
-                            })
-                            .error(response => {
-                                context.error(response);
-                                reject(response);
-                            });
-                        }); 
-                
-                        var installs = new Promise((resolve, reject) => {
-                            var options = BuildUrl(`/analytics/versions?start=${release.uploaded_at}&versions=${release.short_version}`, token, owner, app);
-                            request(options)
-                            .then(results => {
-                                results = JSON.parse(results);
-                                if (results.versions && results.versions[0]) {
-                                    resolve(results.versions[0].count);
-                                } else
-                                    resolve(0);
-                            })
-                            .error(response => {
-                                context.error(response);
-                                reject(response);
-                            });
-                        }); 
-            
-                        Promise.all([crashes, sessions, installs ])
-                        .then(values => { 
-                            let [ crashes, sessions, installs ] = [ ...values ];
-
-                            context.log(`Crashes Detected: ${crashes}`);
-                            context.log(`Sessions (1-30min): ${sessions}`);
-                            context.log(`Total Installs: ${installs}`);
-
-                            if (crashes <= rule.crashes && installs >= rule.installs && sessions >= rule.sessions) {
-                                context.log(`Re-releasing latest version...`);
-
-                                return GetDestination(token, owner, app, rule)
-                                .then(group => {
-                                    if(group) {
-                                        return GetRelease(token, owner, app, release.id)
-                                        .then(release => {
-                                            if(release) {
-                                                const patch = {
-                                                    destinations: [{ id: group.id, name: group.name }],
-                                                    mandatory_update: release.mandatory_update,
-                                                    release_notes: release.release_notes
-                                                };
-                                                PatchRelease(token, owner, app, release.id, patch)
-                                                .then((release) => {
-                                                    resolve()
-                                                })
-                                                .error(response => {
-                                                    context.error(response);
-                                                    reject(response);
-                                                });
-                                            }
-                                        });
-
-                                        resolve(true);
-                                    } else {
-                                        reject("Could not lookup destination for re-release.");
-                                    }
-                                });
-                            } else {
-                                context.log(`Nothing to perform.`);
-                                resolve(false);
-                            }
-                        });
-                    } else {
-                        context.log(`Latest release (${release.short_version}) has already been distributed to the destination.`);
-                        resolve(false);
-                    }
-                } else {
-                    context.log("No releases available in source.");
-                    resolve(false);
-                }
-            })
-            .error(response => {
-                reject(error);
-                context.error(response);
-            });
-        }));
+    for (rule of rules) {
+        ruleSet.push(getRulePromise(rule, context));
     }
 
     Promise.all(ruleSet)
-    .then(values => {
-        context.log("Finished processing!");
-        context.done();
-    });
+        .then(values => {
+            context.log("Finished processing!");
+            context.done();
+        }).catch((error) => {
+            context.log(error);
+            context.done();
+        });
 };
 
-function BuildUrl(endpoint, token, owner, app) {
-    const options = {
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-API-Token': token },
-        url: `https://api.appcenter.ms/v0.1/apps/${owner}/${app}${endpoint}`
-    };
-    return options;
-}
+async function getRulePromise(rule, context) {
+    const owner = rule.owner;
+    const app = rule.app;
+    const sourceGroup = rule.source;
+    const destinationGroup = rule.destination;
+    const maxCrashes = rule.crashes;
+    const minInstallations = rule.installs;
+    const minSessions = rule.sessions;
 
-function GetLatest(releases, group) {
-    for(z = 0; z < releases.length; z++) {
-        if(IsInGroup(releases[z], group)) {
-            return releases[z];
-        }
+    // We need to make a check whether the user has specified all the properties in config.
+    if (!(owner && app && sourceGroup && destinationGroup && maxCrashes && minInstallations && minSessions)) {
+        throw new Error("ERROR: Invalid config file: missing one of the properties.");
+    }
+
+    context.log(`Processing rule for ${app} (${sourceGroup} -> ${destinationGroup})...`);
+    const releases = await appCenterApi.getRecentReleases(owner, app);
+
+    // Getting the latest release from the source group:
+    const release = utils.getLatestRelease(releases, sourceGroup);
+    if (!release) {
+        context.log("No releases available in source group.");
+        return;
+    }
+
+    // If it has been already released to the destination group, stop the execution:
+    if (utils.isInGroup(release, destinationGroup)) {
+        context.log(`Latest release (${release.short_version}) has already been distributed to the destination group.`);
+        return;
+    }
+
+    context.log(`Checking stats for version ${release.short_version} (${release.id})...`);
+    const stats = await getStats(release, owner, app);
+    let [crashes, sessions, installations] = [...stats];
+    context.log(`Crashes Detected: ${crashes}`);
+    context.log(`Sessions (30sec-30min): ${sessions}`);
+    context.log(`Total Installations: ${installations}`);
+
+    // Proceed with the release only if 
+    // - the amount of crashes since the release has been made 
+    //   does not exceed the maximum amount specified in config file;
+    // - the amount of installations since the release has been made 
+    //   is higher than the specified in config file;
+    // - the amount of event sessions since the release has been made 
+    //   is higher than the specified in config file;
+    if (!(crashes <= maxCrashes && installations >= minInstallations && sessions >= minSessions)) {
+        context.log(`Nothing to perform.`);
+        return;
+    }
+
+    context.log(`Re-releasing latest version...`);
+    const group = await appCenterApi.getDestinationGroup(owner, app, rule);
+    if (!group) {
+        throw new Error("Could not lookup destination group for re-release.");
+    }
+    const newRelease = await appCenterApi.getRelease(owner, app, release.id);
+    if (!newRelease) {
+        return;
+    } else {
+        const patchRelease = {
+            destinations: [{ id: group.id, name: group.name }],
+            mandatory_update: newRelease.mandatory_update,
+            release_notes: newRelease.release_notes
+        };
+        return await appCenterApi.makeRelease(owner, app, newRelease.id, patchRelease);
     }
 }
 
-function IsInGroup(release, group) {
-    if(release.distribution_groups) {
-        for(i = 0; i < release.distribution_groups.length; i++) {
-            if(release.distribution_groups[i].name == group)
-                return true;
-        }
-    }
-    return false;
+async function getStats(release, owner, app) {
+    const crashesPromise = appCenterApi.getCrashes(release, owner, app);
+    const installationsPromise = appCenterApi.getInstallations(release, owner, app);
+    const sessionsPromise = appCenterApi.getSessions(release, owner, app);
+    return Promise.all([crashesPromise, sessionsPromise, installationsPromise]);
 }
 
-function FindOne(endpoint, token, owner, app) {
-    var options = BuildUrl(endpoint, token, owner, app);
-    return request(options)
-    .then(result => {
-        result = JSON.parse(result);
-        if (result) {
-            return result;
-        }
-    })
-}
-
-function GetDestination(token, owner, app, rule) {
-    switch(rule.type) {
-        case "store":
-            return FindOne(`/distribution_stores/${rule.destination}`, token, owner, app);
-        default:
-            return FindOne(`/distribution_groups/${rule.destination}`, token, owner, app);
-    }
-}
-
-function GetRelease(token, owner, app, release) {
-    return FindOne(`/releases/${release}`, token, owner, app);
-}
-
-function PatchRelease(token, owner, app, id, release) {
-    const options = BuildUrl(`/releases/${id}`, token, owner, app);
-    Object.assign(options, { method: "PATCH", body: JSON.stringify(release) })
-    return request(options)
-    .then((result) => {
-        return result;
-    })
-}
