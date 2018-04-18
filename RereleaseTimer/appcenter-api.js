@@ -24,7 +24,7 @@ module.exports = {
             });
     },
 
-    getDestinationGroup: async function (owner, app, rule) {
+    getDestinationGroup: function (owner, app, rule) {
         switch (rule.type) {
             case "store":
                 return makeRequest(`/distribution_stores/${rule.destination}`, token, owner, app);
@@ -33,15 +33,15 @@ module.exports = {
         }
     },
 
-    getRecentReleases: async function (owner, app, rule) {
+    getRecentReleases: function (owner, app, rule) {
         return makeRequest(`/recent_releases`, token, owner, app);
     },
 
-    getRelease: async function (owner, app, release) {
+    getRelease: function (owner, app, release) {
         return makeRequest(`/releases/${release}`, token, owner, app);
     },
 
-    makeRelease: async function (owner, app, id, release) {
+    makeRelease: function (owner, app, id, release) {
         return makeRequest(`/releases/${id}`, token, owner, app, release);
     }
 };
@@ -58,7 +58,7 @@ function buildUrl(endpoint, token, owner, app) {
     return options;
 }
 
-async function makeRequest(endpoint, token, owner, app, body) {
+function makeRequest(endpoint, token, owner, app, body) {
     var options = buildUrl(endpoint, token, owner, app);
     if (body) {
 
