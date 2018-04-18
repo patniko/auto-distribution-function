@@ -11,15 +11,17 @@ module.exports = function (context, rereleaseTimer) {
     }
     const ruleSet = [];
     for (rule of rules) {
-        ruleSet.push(getRulePromise(rule, context));
+        ruleSet.push(getRulePromise(rule, context).then(() => {
+            context.log("Finished processing!");
+        }).catch((error) => {
+            context.log(error);
+        }));
     }
 
     Promise.all(ruleSet)
         .then(values => {
-            context.log("Finished processing!");
             context.done();
         }).catch((error) => {
-            context.log(error);
             context.done();
         });
 };
@@ -33,10 +35,7 @@ async function getRulePromise(rule, context) {
     const minInstallations = rule.installs;
     const minSessions = rule.sessions;
 
-    // We need to make a check whether the user has specified all the properties in config.
-    if (!(owner && app && sourceGroup && destinationGroup && maxCrashes && minInstallations && minSessions)) {
-        throw new Error("ERROR: Invalid config file: missing one of the properties.");
-    }
+    validateParameters(owner, app, sourceGroup, destinationGroup, maxCrashes, minInstallations, minSessions);
 
     context.log(`Processing rule for ${app} (${sourceGroup} -> ${destinationGroup})...`);
     const releases = await appCenterApi.getRecentReleases(owner, app);
@@ -69,16 +68,20 @@ async function getRulePromise(rule, context) {
     // - the amount of event sessions since the release has been made 
     //   is higher than the specified in config file;
     if (!(crashes <= maxCrashes && installations >= minInstallations && sessions >= minSessions)) {
-        context.log(`Nothing to perform.`);
+        context.log(`The conditions not met: nothing to perform.`);
         return;
     }
 
     context.log(`Re-releasing latest version...`);
+    await makeRelease(owner, app, rule, release.id);
+}
+
+async function makeRelease(owner, app, rule, releaseId) {
     const group = await appCenterApi.getDestinationGroup(owner, app, rule);
     if (!group) {
         throw new Error("Could not lookup destination group for re-release.");
     }
-    const newRelease = await appCenterApi.getRelease(owner, app, release.id);
+    const newRelease = await appCenterApi.getRelease(owner, app, releaseId);
     if (!newRelease) {
         return;
     } else {
@@ -91,10 +94,42 @@ async function getRulePromise(rule, context) {
     }
 }
 
-async function getStats(release, owner, app) {
+function getStats(release, owner, app) {
     const crashesPromise = appCenterApi.getCrashes(release, owner, app);
     const installationsPromise = appCenterApi.getInstallations(release, owner, app);
     const sessionsPromise = appCenterApi.getSessions(release, owner, app);
     return Promise.all([crashesPromise, sessionsPromise, installationsPromise]);
+}
+
+function validateParameters(owner, app, sourceGroup, destinationGroup, maxCrashes, minInstallations, minSessions) {
+    
+    // We need to make a check whether the user has specified all the properties in config.
+    if (!owner) {
+        throw new Error("ERROR: Invalid config file: missing 'owner' property.");
+    }
+
+    if (!app) {
+        throw new Error("ERROR: Invalid config file: missing 'app' property.");
+    }
+
+    if (!sourceGroup) {
+        throw new Error("ERROR: Invalid config file: missing 'source' property.");
+    }
+
+    if (!destinationGroup) {
+        throw new Error("ERROR: Invalid config file: missing 'destination' property.");
+    }
+
+    if (!maxCrashes) {
+        throw new Error("ERROR: Invalid config file: missing 'crashes' property.");
+    }
+
+    if (!minInstallations) {
+        throw new Error("ERROR: Invalid config file: missing 'installations' property.");
+    }
+
+    if (!minSessions) {
+        throw new Error("ERROR: Invalid config file: missing 'sessions' property.");
+    }
 }
 
