@@ -1,22 +1,12 @@
 [  
     {      
-        "owner": "app-center",
-        "app": "Tester-App-iOS",
-        "source": "Alpha Testers",
-        "destination": "Beta Testers",
-        "installs": 1,
-        "sessions": 1,
-        "crashes": 1
-    },
-    {      
-        "owner": "app-center",
-        "app": "Tester-App-iOS",
+        "owner": "build2018",
+        "app": "conference-android",
         "source": "Beta Testers",
-        "destination": "iTunes Connect users",
-        "type": "store",
-        "installs": 20,
-        "sessions": 10,
-        "crashes": 2
+        "destination": "Prerelease",
+        "installs": 0,
+        "sessions": 0,
+        "crashes": 0
     }
  ]
  

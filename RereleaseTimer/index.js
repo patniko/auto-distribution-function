@@ -121,15 +121,15 @@ function validateParameters(owner, app, sourceGroup, destinationGroup, maxCrashe
     }
 
     if (!maxCrashes) {
-        throw new Error("ERROR: Invalid config file: missing 'crashes' property.");
+        maxCrashes = 0;
     }
 
     if (!minInstallations) {
-        throw new Error("ERROR: Invalid config file: missing 'installations' property.");
+        minInstallations = 0;
     }
 
     if (!minSessions) {
-        throw new Error("ERROR: Invalid config file: missing 'sessions' property.");
+        minSessions = 0;
     }
 }
 
